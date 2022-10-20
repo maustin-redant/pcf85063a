@@ -5,5 +5,4 @@
 #
 
 zephyr_include_directories(include)
-
-add_subdirectory_ifdef(CONFIG_PCF85063A drivers/rtc)
+add_subdirectory_ifdef(CONFIG_PCF85063A drivers/counter)

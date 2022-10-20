@@ -8,7 +8,8 @@
 #ifndef ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 #define ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/i2c.h>
 #include <time.h>
 
 #define PCF85063A_BCD_UPPER_SHIFT 4
@@ -119,8 +120,7 @@
 
 struct pcf85063a_data
 {
-	const struct device *dev;
-	const struct device *i2c;
+	const struct i2c_dt_spec i2c;
 };
 
 int pcf85063a_init(const struct device *dev);
