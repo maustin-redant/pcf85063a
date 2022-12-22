@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2022 Circuit Dojo LLC
  *
@@ -7,8 +8,9 @@
 #ifndef ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 #define ZEPHYR_DRIVERS_RTC_PCF85063A_PCF85063A_H_
 
-#include <zephyr/kernel.h>
-#include <zephyr/drivers/i2c.h>
+#include <kernel.h>
+#include <zephyr.h>
+#include <drivers/i2c.h>
 #include <time.h>
 
 #define PCF85063A_BCD_UPPER_SHIFT 4
@@ -145,6 +147,7 @@ int pcf85063a_init(const struct device *dev);
 int pcf85063a_set_cap_sel(const struct device *dev, uint8_t cap_value);
 int pcf85063a_set_offset_mode(const struct device *dev, uint8_t offset_mode_value);
 int pcf85063a_set_offset_value(const struct device *dev, uint8_t offset_value);
+
 int pcf85063a_set_time(const struct device *dev, const struct tm *time);
 int pcf85063a_get_time(const struct device *dev, struct tm *time);
 

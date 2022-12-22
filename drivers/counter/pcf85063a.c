@@ -4,25 +4,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/init.h>
-#include <zephyr/kernel.h>
-#include <zephyr/sys/byteorder.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/sys/util.h>
+#include <init.h>
+#include <zephyr.h>
+#include <kernel.h>
+#include <sys/byteorder.h>
+#include <sys/__assert.h>
+#include <sys/util.h>
 
 #include <stdint.h>
 #include <string.h>
 
-#include <zephyr/device.h>
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/i2c.h>
-#include <zephyr/drivers/counter.h>
+#include <device.h>
+#include <drivers/gpio.h>
+#include <drivers/i2c.h>
+#include <drivers/counter.h>
 
-#include <zephyr/sys/timeutil.h>
+#include <sys/timeutil.h>
 
 #include <drivers/counter/pcf85063a.h>
 
-#include <zephyr/logging/log.h>
+#include <logging/log.h>
 LOG_MODULE_REGISTER(pcf85063a);
 
 #define DT_DRV_COMPAT nxp_pcf85063a
@@ -61,7 +62,7 @@ int pcf85063a_set_offset_mode(const struct device *dev, uint8_t offset_mode_valu
 	uint8_t mask = PCF85063A_OFFSET_MODE;
 
 	// Write back the updated register value
-	int ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_OFFSET, mask, offset_mode_value);
+	int ret = i2c_reg_update_byte(&data->i2c, PCF85063A_OFFSET, mask, offset_mode_value);
 	if (ret)
 	{
 		LOG_ERR("Unable to set offset mode value. (err %i)", ret);
@@ -82,7 +83,7 @@ int pcf85063a_set_offset_value(const struct device *dev, uint8_t offset_value)
 	uint8_t mask = PCF85063A_OFFSET_VALUE_MASK;
 
 	// Write back the updated register value
-	int ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_OFFSET, mask, offset_value);
+	int ret = i2c_reg_update_byte(&data->i2c, PCF85063A_OFFSET, mask, offset_value);
 	if (ret)
 	{
 		LOG_ERR("Unable to set offset value. (err %i)", ret);
@@ -101,7 +102,7 @@ int pcf85063a_set_cap_sel(const struct device *dev, uint8_t cap_value)
 	uint8_t mask = PCF85063A_CTRL1_CAP_SEL;
 
 	// Write back the updated register value
-	int ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_CTRL1, mask, cap_value);
+	int ret = i2c_reg_update_byte(&data->i2c, PCF85063A_CTRL1, mask, cap_value);
 
 	if (ret)
 	{
@@ -424,7 +425,7 @@ int pcf85063a_init(const struct device *dev)
 	DEVICE_DT_INST_DEFINE(inst,						\
 						  pcf85063a_init, NULL,                              \
 						  &pcf85063a_data_##inst, &pcf85063_cfg_info_##inst, \
-						  POST_KERNEL, CONFIG_APPLICATION_INIT_PRIORITY,             \
+						  POST_KERNEL, CONFIG_I2C_INIT_PRIORITY,             \
 						  &pcf85063a_api);
 
 /* Create the struct device for every status "okay"*/
