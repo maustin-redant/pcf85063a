@@ -5,7 +5,6 @@
  */
 
 #include <init.h>
-#include <zephyr.h>
 #include <kernel.h>
 #include <sys/byteorder.h>
 #include <sys/__assert.h>
@@ -145,7 +144,9 @@ int pcf85063a_set_time(const struct device *dev, const struct tm *time)
 	raw_time[6] = ((year / 10) << PCF85063A_BCD_UPPER_SHIFT) + (year % 10);
 
 	/* Write to device */
-	ret = i2c_burst_write_dt(&data->i2c, PCF85063A_SECONDS,
+	ret = i2c_burst_write(data->i2c,
+						  DT_REG_ADDR(DT_DRV_INST(0)),
+						  PCF85063A_SECONDS,
 						  raw_time,
 						  sizeof(raw_time));
 	if (ret)
@@ -165,7 +166,9 @@ int pcf85063a_get_time(const struct device *dev, struct tm *time)
 	// Get the data pointer
 	struct pcf85063a_data *data = dev->data;
 
-	ret = i2c_burst_read_dt(&data->i2c, PCF85063A_SECONDS,
+	ret = i2c_burst_read(data->i2c,
+						 DT_REG_ADDR(DT_DRV_INST(0)),
+						 PCF85063A_SECONDS,
 						 raw_time,
 						 sizeof(raw_time));
 	if (ret)
@@ -222,7 +225,7 @@ static int pcf85063a_start(const struct device *dev)
 	uint8_t mask = PCF85063A_CTRL1_STOP;
 
 	// Write back the updated register value
-	int ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_CTRL1, mask, reg);
+	int ret = i2c_reg_update_byte_dt(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_CTRL1, mask, reg);
 	if (ret)
 	{
 		LOG_ERR("Unable to stop RTC. (err %i)", ret);
@@ -243,7 +246,7 @@ static int pcf85063a_stop(const struct device *dev)
 	uint8_t mask = PCF85063A_CTRL1_STOP;
 
 	// Write back the updated register value
-	int ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_CTRL1, mask, reg);
+	int ret = i2c_reg_update_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_CTRL1, mask, reg);
 	if (ret)
 	{
 		LOG_ERR("Unable to stop RTC. (err %i)", ret);
@@ -275,7 +278,7 @@ static int pcf85063a_set_alarm(
 	uint8_t reg = 0;
 	uint8_t mask = PCF85063A_CTRL2_TF;
 
-	ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_CTRL2, mask, reg);
+	ret = i2c_reg_update_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_CTRL2, mask, reg);
 	if (ret)
 	{
 		LOG_ERR("Unable to set RTC alarm. (err %i)", ret);
@@ -283,7 +286,7 @@ static int pcf85063a_set_alarm(
 	}
 
 	// Write the tick count. Ticks are 1 sec
-	ret = i2c_reg_write_byte_dt(&data->i2c, PCF85063A_TIMER_VALUE, ticks);
+	ret = i2c_reg_write_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_TIMER_VALUE, ticks);
 	if (ret)
 	{
 		LOG_ERR("Unable to set RTC timer value. (err %i)", ret);
@@ -297,7 +300,7 @@ static int pcf85063a_set_alarm(
 	LOG_INF("mode 0x%x", reg);
 
 	// Write back the updated register value
-	ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_TIMER_MODE, mask, reg);
+	ret = i2c_reg_update_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_TIMER_MODE, mask, reg);
 	if (ret)
 	{
 		LOG_ERR("Unable to set RTC alarm. (err %i)", ret);
@@ -320,7 +323,7 @@ static int pcf85063a_cancel_alarm(const struct device *dev, uint8_t chan_id)
 	uint8_t reg = 0;
 	uint8_t mask = PCF85063A_CTRL2_TF;
 
-	ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_CTRL2, mask, reg);
+	ret = i2c_reg_update_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_CTRL2, mask, reg);
 	if (ret)
 	{
 		LOG_ERR("Unable to set RTC alarm. (err %i)", ret);
@@ -334,7 +337,7 @@ static int pcf85063a_cancel_alarm(const struct device *dev, uint8_t chan_id)
 	LOG_INF("mode 0x%x", reg);
 
 	// Write back the updated register value
-	ret = i2c_reg_update_byte_dt(&data->i2c, PCF85063A_TIMER_MODE, mask, reg);
+	ret = i2c_reg_update_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_TIMER_MODE, mask, reg);
 	if (ret)
 	{
 		LOG_ERR("Unable to cancel RTC alarm. (err %i)", ret);
@@ -359,7 +362,7 @@ static uint32_t pcf85063a_get_pending_int(const struct device *dev)
 	uint8_t reg = 0;
 
 	// Write back the updated register value
-	int ret = i2c_reg_read_byte_dt(&data->i2c, PCF85063A_CTRL2, &reg);
+	int ret = i2c_reg_read_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_CTRL2, &reg);
 	if (ret)
 	{
 		LOG_ERR("Unable to get RTC CTRL2 reg. (err %i)", ret);
@@ -391,8 +394,10 @@ int pcf85063a_init(const struct device *dev)
 
 	/* Get the i2c device binding*/
 	struct pcf85063a_data *data = dev->data;
+	data->i2c = device_get_binding(DT_BUS_LABEL(DT_DRV_INST(0)));
+
 	/* Set I2C Device. */
-	if (!device_is_ready(data->i2c.bus))
+	if (data->i2c == NULL)
 	{
 		LOG_ERR("Failed to get pointer to %s device!", data->i2c.bus->name);
 		return -EINVAL;
@@ -400,7 +405,7 @@ int pcf85063a_init(const struct device *dev)
 
 	/* Check if it's alive. */
 	uint8_t reg;
-	int ret = i2c_reg_read_byte_dt(&data->i2c, PCF85063A_CTRL1, &reg);
+	int ret = i2c_reg_read_byte(data->i2c, DT_REG_ADDR(DT_DRV_INST(0)), PCF85063A_CTRL1, &reg);
 	if (ret)
 	{
 		LOG_ERR("Failed to read from PCF85063A! (err %i)", ret);
